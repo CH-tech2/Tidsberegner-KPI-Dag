@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tidsberegner (minutter)</title>
+  <style>
+    :root{
+      --red:#D20014;
+      --darkred:#9F000F;
+      --teal:#208684;
+      --gray:#656565;
+      --bg:#f6f6f6;
+    }
+    body{font-family: Arial, sans-serif; background: var(--bg); margin:0; padding:24px;}
+    .card{max-width:900px; margin:auto; background:#fff; border:1px solid #ddd; border-radius:10px; padding:18px;}
+    h1{margin:0 0 12px; font-size:20px;}
+    .grid{display:grid; grid-template-columns: 1fr 1fr 140px; gap:10px; align-items:center;}
+    .rowhead{font-weight:bold; color:var(--gray);}
+    input[type="time"]{width:100%; padding:8px; font-size:14px;}
+    .mins{font-variant-numeric: tabular-nums; padding:8px; border:1px solid #ddd; border-radius:6px; background:#fafafa;}
+    .controls{display:flex; gap:12px; flex-wrap:wrap; margin:14px 0;}
+    button{
+      background:var(--red); color:#fff; border:none; padding:10px 14px; border-radius:8px;
+      cursor:pointer; font-weight:bold;
+    }
+    button:hover{background:var(--darkred);}
+    .checks{display:flex; gap:14px; align-items:center; flex-wrap:wrap;}
+    .checks label{display:flex; gap:6px; align-items:center;}
+    .totals{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;}
+    .totalbox{padding:10px; border:1px solid #ddd; border-radius:8px;}
+    .big{font-size:18px; font-weight:bold; color:var(--teal);}
+    .small{color:var(--gray); font-size:12px;}
+    .warn{color:var(--darkred); font-size:12px; margin-top:6px;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Tidsberegner (kun minutter)</h1>
+
+    <div class="grid" style="margin-bottom:8px;">
+      <div class="rowhead">Fra (HH:MM)</div>
+      <div class="rowhead">Til (HH:MM)</div>
+      <div class="rowhead">Minutter</div>
+    </div>
+
+    <div id="rows" class="grid"></div>
+
+    <div class="controls">
+      <button id="calcBtn">Beregn</button>
+      <button id="clearBtn" style="background:#656565;">Nulstil</button>
+
+      <div class="checks" style="margin-left:auto;">
+        <span class="small" style="min-width:140px;">Fratræk fra total:</span>
+        <label><input type="checkbox" class="deduct" value="20"> -20</label>
+        <label><input type="checkbox" class="deduct" value="20"> -20</label>
+        <label><input type="checkbox" class="deduct" value="20"> -20</label>
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="totalbox">
+        <div class="small">Sum af alle linjer (min)</div>
+        <div id="sumMins" class="big">0</div>
+      </div>
+      <div class="totalbox">
+        <div class="small">Total efter fratræk (min)</div>
+        <div id="totalAfter" class="big">0</div>
+        <div id="note" class="warn" style="display:none;">
+          Total kan ikke være negativ (sættes til 0).
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Opret 6 rækker
+  const rowsEl = document.getElementById('rows');
+  const N = 6;
+
+  function makeRow(i){
+    const from = document.createElement('input');
+    from.type = 'time';
+    from.step = 60; // kun minutter
+    from.id = `from${i}`;
+
+    const to = document.createElement('input');
+    to.type = 'time';
+    to.step = 60;
+    to.id = `to${i}`;
+
+    const out = document.createElement('div');
+    out.className = 'mins';
+    out.id = `out${i}`;
+    out.textContent = '0';
+
+    rowsEl.appendChild(from);
+    rowsEl.appendChild(to);
+    rowsEl.appendChild(out);
+  }
+  for(let i=1;i<=N;i++) makeRow(i);
+
+  function parseTimeToMinutes(t){
+    // t = "HH:MM" eller ""
+    if(!t) return null;
+    const [hh, mm] = t.split(':').map(Number);
+    if(Number.isNaN(hh) || Number.isNaN(mm)) return null;
+    return hh*60 + mm;
+  }
+
+  function diffMinutes(fromMin, toMin){
+    // Hvis to er "mindre" end fra -> over midnat
+    let d = toMin - fromMin;
+    if(d < 0) d += 24*60;
+    return d;
+  }
+
+  function calc(){
+    let sum = 0;
+
+    for(let i=1;i<=N;i++){
+      const f = parseTimeToMinutes(document.getElementById(`from${i}`).value);
+      const t = parseTimeToMinutes(document.getElementById(`to${i}`).value);
+
+      let d = 0;
+      if(f !== null && t !== null){
+        d = diffMinutes(f, t);
+      }
+      document.getElementById(`out${i}`).textContent = String(d);
+      sum += d;
+    }
+
+    // Fratræk: 3 felter á 20 min
+    const deductBoxes = Array.from(document.querySelectorAll('.deduct'));
+    const deduct = deductBoxes.reduce((acc, cb) => acc + (cb.checked ? Number(cb.value) : 0), 0);
+
+    const after = sum - deduct;
+
+    document.getElementById('sumMins').textContent = String(sum);
+    document.getElementById('totalAfter').textContent = String(Math.max(0, after));
+    document.getElementById('note').style.display = after < 0 ? 'block' : 'none';
+  }
+
+  function clearAll(){
+    for(let i=1;i<=N;i++){
+      document.getElementById(`from${i}`).value = '';
+      document.getElementById(`to${i}`).value = '';
+      document.getElementById(`out${i}`).textContent = '0';
+    }
+    document.querySelectorAll('.deduct').forEach(cb => cb.checked = false);
+    document.getElementById('sumMins').textContent = '0';
+    document.getElementById('totalAfter').textContent = '0';
+    document.getElementById('note').style.display = 'none';
+  }
+
+  document.getElementById('calcBtn').addEventListener('click', calc);
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
+</script>
+</body>
+</html>
