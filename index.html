@@ -1,160 +1,360 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tidsberegner (minutter)</title>
-  <style>
-    :root{
-      --red:#D20014;
-      --darkred:#9F000F;
-      --teal:#208684;
-      --gray:#656565;
-      --bg:#f6f6f6;
-    }
-    body{font-family: Arial, sans-serif; background: var(--bg); margin:0; padding:24px;}
-    .card{max-width:900px; margin:auto; background:#fff; border:1px solid #ddd; border-radius:10px; padding:18px;}
-    h1{margin:0 0 12px; font-size:20px;}
-    .grid{display:grid; grid-template-columns: 1fr 1fr 140px; gap:10px; align-items:center;}
-    .rowhead{font-weight:bold; color:var(--gray);}
-    input[type="time"]{width:100%; padding:8px; font-size:14px;}
-    .mins{font-variant-numeric: tabular-nums; padding:8px; border:1px solid #ddd; border-radius:6px; background:#fafafa;}
-    .controls{display:flex; gap:12px; flex-wrap:wrap; margin:14px 0;}
-    button{
-      background:var(--red); color:#fff; border:none; padding:10px 14px; border-radius:8px;
-      cursor:pointer; font-weight:bold;
-    }
-    button:hover{background:var(--darkred);}
-    .checks{display:flex; gap:14px; align-items:center; flex-wrap:wrap;}
-    .checks label{display:flex; gap:6px; align-items:center;}
-    .totals{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;}
-    .totalbox{padding:10px; border:1px solid #ddd; border-radius:8px;}
-    .big{font-size:18px; font-weight:bold; color:var(--teal);}
-    .small{color:var(--gray); font-size:12px;}
-    .warn{color:var(--darkred); font-size:12px; margin-top:6px;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidsberegner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+            color: #e94560;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85em;
+        }
+        .time-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 30px 1fr 60px 80px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .row-label {
+            font-weight: bold;
+            color: #e94560;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        input[type="time"] {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 1.1em;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="time"]:focus {
+            border-color: #e94560;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 1.3em;
+            color: rgba(255,255,255,0.5);
+        }
+        .result-cell {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #53d8fb;
+            min-width: 80px;
+        }
+        .unit-label {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9em;
+        }
+        .section-divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 25px 0;
+        }
+        .pause-section h2 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #e94560;
+        }
+        .pause-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .pause-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            user-select: none;
+        }
+        .pause-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .pause-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #e94560;
+            cursor: pointer;
+        }
+        .pause-item label {
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .total-section {
+            background: rgba(233, 69, 96, 0.15);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .total-section .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+        .total-section .total-row:last-child {
+            margin-bottom: 0;
+        }
+        .total-label {
+            color: rgba(255,255,255,0.7);
+        }
+        .total-value {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #53d8fb;
+        }
+        .total-final {
+            font-size: 1.6em;
+            color: #4ade80 !important;
+        }
+        .pause-total {
+            color: #f59e0b !important;
+        }
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        button {
+            padding: 14px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-calc {
+            background: linear-gradient(135deg, #e94560, #c81e45);
+            color: white;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+        .btn-calc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+        }
+        .btn-clear {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-clear:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .shortcut-info {
+            text-align: center;
+            margin-top: 15px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.8em;
+        }
+        .shortcut-info kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: inherit;
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Tidsberegner (kun minutter)</h1>
+    <div class="container">
+        <h1>⏱ Tidsberegner</h1>
+        <p class="subtitle">Beregn tid mellem klokke​slæt – alt vises i minutter</p>
 
-    <div class="grid" style="margin-bottom:8px;">
-      <div class="rowhead">Fra (HH:MM)</div>
-      <div class="rowhead">Til (HH:MM)</div>
-      <div class="rowhead">Minutter</div>
-    </div>
+        <!-- 6 tidsrækker -->
+        <div id="timeRows"></div>
 
-    <div id="rows" class="grid"></div>
+        <hr class="section-divider">
 
-    <div class="controls">
-      <button id="calcBtn">Beregn</button>
-      <button id="clearBtn" style="background:#656565;">Nulstil</button>
-
-      <div class="checks" style="margin-left:auto;">
-        <span class="small" style="min-width:140px;">Fratræk fra total:</span>
-        <label><input type="checkbox" class="deduct" value="20"> -20</label>
-        <label><input type="checkbox" class="deduct" value="20"> -20</label>
-        <label><input type="checkbox" class="deduct" value="20"> -20</label>
-      </div>
-    </div>
-
-    <div class="totals">
-      <div class="totalbox">
-        <div class="small">Sum af alle linjer (min)</div>
-        <div id="sumMins" class="big">0</div>
-      </div>
-      <div class="totalbox">
-        <div class="small">Total efter fratræk (min)</div>
-        <div id="totalAfter" class="big">0</div>
-        <div id="note" class="warn" style="display:none;">
-          Total kan ikke være negativ (sættes til 0).
+        <!-- Pause checkboxes -->
+        <div class="pause-section">
+            <h2>🔻 Pause-fradrag (20 min pr. stk.)</h2>
+            <div class="pause-row">
+                <div class="pause-item" onclick="toggleCheckbox('p1')">
+                    <input type="checkbox" id="p1">
+                    <label for="p1">Pause 1 (−20 min)</label>
+                </div>
+                <div class="pause-item" onclick="toggleCheckbox('p2')">
+                    <input type="checkbox" id="p2">
+                    <label for="p2">Pause 2 (−40 min)</label>
+                </div>
+                <div class="pause-item" onclick="toggleCheckbox('p3')">
+                    <input type="checkbox" id="p3">
+                    <label for="p3">Pause 3 (−60 min)</label>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- Total sektion -->
+        <div class="total-section">
+            <div class="total-row">
+                <span class="total-label">Samlet tid:</span>
+                <span class="total-value" id="totalBrutto">0 min</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Pause-fradrag:</span>
+                <span class="total-value pause-total" id="totalPause">0 min</span>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
+            <div class="total-row">
+                <span class="total-label" style="font-size:1.2em;">Total (netto):</span>
+                <span class="total-value total-final" id="totalNetto">0 min</span>
+            </div>
+        </div>
+
+        <!-- Knapper -->
+        <div class="buttons">
+            <button class="btn-calc" onclick="beregn()">⚡ Beregn</button>
+            <button class="btn-clear" onclick="rydAlt()">🗑 Ryd alt</button>
+        </div>
+        <div class="shortcut-info">
+            <kbd>Enter</kbd> / <kbd>F8</kbd> = Beregn &nbsp;&nbsp;|&nbsp;&nbsp; <kbd>Delete</kbd> = Ryd alt
+        </div>
     </div>
-  </div>
 
-<script>
-  // Opret 6 rækker
-  const rowsEl = document.getElementById('rows');
-  const N = 6;
+    <script>
+        // Opret 6 rækker
+        const rowContainer = document.getElementById('timeRows');
+        for (let i = 1; i <= 6; i++) {
+            const row = document.createElement('div');
+            row.className = 'time-row';
+            row.innerHTML = `
+                <span class="row-label">${i}.</span>
+                <input type="time" id="fra${i}" placeholder="Fra">
+                <span class="arrow">→</span>
+                <input type="time" id="til${i}" placeholder="Til">
+                <span class="result-cell" id="res${i}">—</span>
+                <span class="unit-label">min</span>
+            `;
+            rowContainer.appendChild(row);
+        }
 
-  function makeRow(i){
-    const from = document.createElement('input');
-    from.type = 'time';
-    from.step = 60; // kun minutter
-    from.id = `from${i}`;
+        function toggleCheckbox(id) {
+            const cb = document.getElementById(id);
+            cb.checked = !cb.checked;
+        }
 
-    const to = document.createElement('input');
-    to.type = 'time';
-    to.step = 60;
-    to.id = `to${i}`;
+        function beregnMinutter(fra, til) {
+            if (!fra || !til) return null;
+            const [fH, fM] = fra.split(':').map(Number);
+            const [tH, tM] = til.split(':').map(Number);
+            let fraMin = fH * 60 + fM;
+            let tilMin = tH * 60 + tM;
+            // Hvis til er mindre end fra → over midnat
+            if (tilMin <= fraMin) {
+                tilMin += 24 * 60;
+            }
+            return tilMin - fraMin;
+        }
 
-    const out = document.createElement('div');
-    out.className = 'mins';
-    out.id = `out${i}`;
-    out.textContent = '0';
+        function beregn() {
+            let total = 0;
+            for (let i = 1; i <= 6; i++) {
+                const fra = document.getElementById(`fra${i}`).value;
+                const til = document.getElementById(`til${i}`).value;
+                const res = document.getElementById(`res${i}`);
+                const min = beregnMinutter(fra, til);
+                if (min !== null) {
+                    res.textContent = min;
+                    total += min;
+                } else {
+                    res.textContent = '—';
+                }
+            }
 
-    rowsEl.appendChild(from);
-    rowsEl.appendChild(to);
-    rowsEl.appendChild(out);
-  }
-  for(let i=1;i<=N;i++) makeRow(i);
+            // Beregn pause-fradrag
+            let pauseCount = 0;
+            if (document.getElementById('p1').checked) pauseCount++;
+            if (document.getElementById('p2').checked) pauseCount++;
+            if (document.getElementById('p3').checked) pauseCount++;
+            const pauseMin = pauseCount * 20;
 
-  function parseTimeToMinutes(t){
-    // t = "HH:MM" eller ""
-    if(!t) return null;
-    const [hh, mm] = t.split(':').map(Number);
-    if(Number.isNaN(hh) || Number.isNaN(mm)) return null;
-    return hh*60 + mm;
-  }
+            const netto = total - pauseMin;
 
-  function diffMinutes(fromMin, toMin){
-    // Hvis to er "mindre" end fra -> over midnat
-    let d = toMin - fromMin;
-    if(d < 0) d += 24*60;
-    return d;
-  }
+            document.getElementById('totalBrutto').textContent = total + ' min';
+            document.getElementById('totalPause').textContent = '−' + pauseMin + ' min';
+            document.getElementById('totalNetto').textContent = netto + ' min';
+        }
 
-  function calc(){
-    let sum = 0;
+        function rydAlt() {
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`fra${i}`).value = '';
+                document.getElementById(`til${i}`).value = '';
+                document.getElementById(`res${i}`).textContent = '—';
+            }
+            document.getElementById('p1').checked = false;
+            document.getElementById('p2').checked = false;
+            document.getElementById('p3').checked = false;
+            document.getElementById('totalBrutto').textContent = '0 min';
+            document.getElementById('totalPause').textContent = '0 min';
+            document.getElementById('totalNetto').textContent = '0 min';
+        }
 
-    for(let i=1;i<=N;i++){
-      const f = parseTimeToMinutes(document.getElementById(`from${i}`).value);
-      const t = parseTimeToMinutes(document.getElementById(`to${i}`).value);
-
-      let d = 0;
-      if(f !== null && t !== null){
-        d = diffMinutes(f, t);
-      }
-      document.getElementById(`out${i}`).textContent = String(d);
-      sum += d;
-    }
-
-    // Fratræk: 3 felter á 20 min
-    const deductBoxes = Array.from(document.querySelectorAll('.deduct'));
-    const deduct = deductBoxes.reduce((acc, cb) => acc + (cb.checked ? Number(cb.value) : 0), 0);
-
-    const after = sum - deduct;
-
-    document.getElementById('sumMins').textContent = String(sum);
-    document.getElementById('totalAfter').textContent = String(Math.max(0, after));
-    document.getElementById('note').style.display = after < 0 ? 'block' : 'none';
-  }
-
-  function clearAll(){
-    for(let i=1;i<=N;i++){
-      document.getElementById(`from${i}`).value = '';
-      document.getElementById(`to${i}`).value = '';
-      document.getElementById(`out${i}`).textContent = '0';
-    }
-    document.querySelectorAll('.deduct').forEach(cb => cb.checked = false);
-    document.getElementById('sumMins').textContent = '0';
-    document.getElementById('totalAfter').textContent = '0';
-    document.getElementById('note').style.display = 'none';
-  }
-
-  document.getElementById('calcBtn').addEventListener('click', calc);
-  document.getElementById('clearBtn').addEventListener('click', clearAll);
-</script>
+        // Tastatur-genveje
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                beregn();
+            } else if (e.key === 'F8') {
+                e.preventDefault();
+                beregn();
+            } else if (e.key === 'Delete') {
+                e.preventDefault();
+                rydAlt();
+            }
+        });
+    </script>
 </body>
 </html>
